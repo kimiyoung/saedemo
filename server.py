@@ -19,18 +19,79 @@ def index():
 def search():
     q = request.query.q or ''
     print 'searching', q, 'in academic'
-    result = client.searchAuthors(q)
+    fields = "naid names homepage affiliation position".split()
+    fields += "citation_no pub_count h_index".split()
+    fields += "interest_years interest_by_year".split()
+    fields += "imgurl imgname imgsrc".split()
+    result = client.searchAuthors(q, returned_fields=fields)
+    conferences = client.searchConferences(q)
+    publications = client.searchPublications(q)
+
+    def genimgurl(imgurl, imgname, imgsrc):
+        # TODO https://gist.github.com/anonymous/5677264
+        defaultImgUrl = "http://pic.aminer.org/picture/images/no_photo.jpg"
+        if imgurl and imgurl.strip().startswith("http://") and \
+                'arnetminer' in imgurl and '/upload/' in imgurl:
+            return imgurl
+        if imgname:
+            if imgname.lower().startswith('http'):
+                return imgname
+            else:
+                return 'http://pic1.aminer.org/picture/' + imgname
+        elif imgurl.startswith('http://'):
+            return imgurl
+        elif imgsrc.strip():
+            return imgsrc
+        return defaultImgUrl
+
+    def gentopics(interest_years, interest_by_year):
+        if interest_years:
+            interests = sorted(zip(interest_years, interest_by_year))
+            return interests[-1][1].split(',')
+        else:
+            return []
+
     return dict(
         query=q,
+        encoded_query=urlencode({"q": q}),
         count=result.total_count,
+        results_title="Experts",
         results=[
             dict(
                 id=a.naid,
                 name=a.names[0],
-                email=a.email
+                url="http://aminer.org/person/-%s.html" % a.naid,
+                description="%s, %s" % (a.position, a.affiliation)
+                    if a.affiliation else a.position,
+                stats=dict(
+                    h_index=a.h_index,
+                    papers=a.pub_count,
+                    citations=a.citation_no
+                ),
+                topics=gentopics(a.interest_years, a.interest_by_year),
+                imgurl=genimgurl(a.imgurl, a.imgname, a.imgsrc),
             ) for a in result.authors
         ],
-        encoded_query=urlencode({"q": q})
+        extra_results_list=[
+            {
+                "title": "Conferences",
+                "items": [
+                    {
+                        "text": c.name,
+                        "link": "http://aminer.org/conference/-%s.html" % c.id
+                    } for c in conferences.confs
+                ]
+            },
+            {
+                "title": "Publications",
+                "items": [
+                    {
+                        "text": p.title,
+                        "link": "http://aminer.org/publication/-%s.html" % p.id
+                    } for p in publications.publications
+                ]
+            },
+        ]
     )
 
 

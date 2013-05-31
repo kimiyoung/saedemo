@@ -26,15 +26,38 @@ class DataCenterClient(object):
     def __init__(self, endpoint):
         self.endpoint = endpoint
 
-    def searchAuthors(self, query, returned_fields=["naid", "names", "email"]):
+    def searchAuthors(self, query, offset=0, count=20,
+                      returned_fields=["naid", "names", "email"]):
         params = interface_pb2.StringQueryParams()
         params.query = query
-        params.offset = 0
-        params.count = 50
+        params.offset = offset
+        params.count = count
         params.returned_fields.extend(returned_fields)
         method = "AuthorService_searchAuthors"
         response = request(self.endpoint, method, params)
         result = interface_pb2.AuthorResult.FromString(response.data)
+        return result
+
+    def searchConferences(self, query, offset=0, count=20):
+        params = interface_pb2.StringQueryParams()
+        params.query = query
+        params.offset = offset
+        params.count = count
+        method = "ConfService_searchConferences"
+        response = request(self.endpoint, method, params)
+        result = interface_pb2.ConferenceResult.FromString(response.data)
+        return result
+
+    def searchPublications(self, query, offset=0, count=20,
+                           returned_fields=["title", "id"]):
+        params = interface_pb2.StringQueryParams()
+        params.query = query
+        params.offset = offset
+        params.count = count
+        params.returned_fields.extend(returned_fields)
+        method = "PubService_searchPublications"
+        response = request(self.endpoint, method, params)
+        result = interface_pb2.PublicationResult.FromString(response.data)
         return result
 
 
