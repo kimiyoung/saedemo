@@ -2,11 +2,11 @@
 
 import os.path
 from bottle import route, run, template, view, static_file, request, urlencode
-from dcclient import DataCenterClient
+from saeclient import SAEClient
 
 import sample_data
 
-client = DataCenterClient("tcp://10.1.1.211:32011")
+client = SAEClient("tcp://127.0.0.1:40111")
 
 
 @route('/')
@@ -14,83 +14,42 @@ def index():
     return template('index')
 
 
-@route('/academic/search')
+@route('/<dataset>/search')
 @view('search')
-def search():
+def search(dataset):
     q = request.query.q or ''
     print 'searching', q, 'in academic'
-    fields = "naid names homepage affiliation position".split()
-    fields += "citation_no pub_count h_index".split()
-    fields += "interest_years interest_by_year".split()
-    fields += "imgurl imgname imgsrc".split()
-    result = client.searchAuthors(q, returned_fields=fields)
-    conferences = client.searchConferences(q)
-    publications = client.searchPublications(q)
-
-    def genimgurl(imgurl, imgname, imgsrc):
-        # TODO https://gist.github.com/anonymous/5677264
-        defaultImgUrl = "http://pic.aminer.org/picture/images/no_photo.jpg"
-        if imgurl and imgurl.strip().startswith("http://") and \
-                'arnetminer' in imgurl and '/upload/' in imgurl:
-            return imgurl
-        if imgname:
-            if imgname.lower().startswith('http'):
-                return imgname
-            else:
-                return 'http://pic1.aminer.org/picture/' + imgname
-        elif imgurl.startswith('http://'):
-            return imgurl
-        elif imgsrc.strip():
-            return imgsrc
-        return defaultImgUrl
-
-    def gentopics(interest_years, interest_by_year):
-        if interest_years:
-            interests = sorted(zip(interest_years, interest_by_year))
-            return interests[-1][1].split(',')
-        else:
-            return []
+    result = client.entity_search(dataset, q)
+    print result
 
     return dict(
         query=q,
-        encoded_query=urlencode({"q": q}),
+        encoded_query=urlencode({"q": result.query}),
         count=result.total_count,
-        results_title="Experts",
+        results_title=dataset,
         results=[
             dict(
-                id=a.naid,
-                name=a.names[0],
-                url="http://aminer.org/person/-%s.html" % a.naid,
-                description="%s, %s" % (a.position, a.affiliation)
-                    if a.affiliation else a.position,
+                id=e.id,
+                name=e.title,
+                url="link:entity/%s" % e.id,
+                description=e.description,
                 stats=dict(
-                    h_index=a.h_index,
-                    papers=a.pub_count,
-                    citations=a.citation_no
+                    (s.type, s.value) for s in e.stat
                 ),
-                topics=gentopics(a.interest_years, a.interest_by_year),
-                imgurl=genimgurl(a.imgurl, a.imgname, a.imgsrc),
-            ) for a in result.authors
+                topics=e.topics,
+                imgurl=e.imgurl
+            ) for e in result.entities
         ],
         extra_results_list=[
             {
-                "title": "Conferences",
+                "title": extra_list.title,
                 "items": [
                     {
-                        "text": c.name,
-                        "link": "http://aminer.org/conference/-%s.html" % c.id
-                    } for c in conferences.confs
+                        "title": item.title,
+                        "link": "link:%s/%s" % (extra_list.title, item.id)
+                    } for item in extra_list.item
                 ]
-            },
-            {
-                "title": "Publications",
-                "items": [
-                    {
-                        "text": p.title,
-                        "link": "http://aminer.org/publication/-%s.html" % p.id
-                    } for p in publications.publications
-                ]
-            },
+            } for extra_list in result.extra_list
         ]
     )
 
