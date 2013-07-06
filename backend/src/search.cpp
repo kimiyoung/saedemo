@@ -61,7 +61,7 @@ bool EntitySearch(const string& input, string& output) {
 
     for (int i = 0; i < result.size(); i ++)
     {
-        DetailedEntity *de = response.add_entities();
+        DetailedEntity *de = response.add_entity();
         int id = result[i].docId;
         de->set_title(dc[id][0].value);
         de->set_id(id);

@@ -36,6 +36,6 @@ message List {
 message EntitySearchResponse {
     required string query = 1;
     required int32 total_count = 2;
-    repeated DetailedEntity entities = 3;
+    repeated DetailedEntity entity = 3;
     repeated List extra_list = 4;
 }
