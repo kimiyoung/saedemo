@@ -1,0 +1,41 @@
+package demoserver;
+
+message EntitySearchRequest {
+    required string dataset = 1;
+    required string query = 2;
+    optional int32 offset = 3;
+    optional int32 count = 4;
+}
+
+message Stat {
+    required string type = 1;
+    required int32 value = 2;
+}
+
+message DetailedEntity {
+    required string title = 1;
+    required int32 id = 2;
+    optional string url = 3;
+    optional string description = 4;
+    repeated Stat stat = 5;
+    optional string topics = 6;
+    optional string imgurl = 7;
+
+}
+
+message ListItem {
+    required string text = 1;
+    required int32 id = 2;
+}
+
+message List {
+    required string title = 1;
+    repeated ListItem item = 2;
+}
+
+message EntitySearchResponse {
+    required string query = 1;
+    required int32 total_count = 2;
+    repeated DetailedEntity entities = 3;
+    repeated List extra_list = 4;
+}
