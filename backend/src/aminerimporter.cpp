@@ -24,8 +24,8 @@
  * 		ConferenceName
  *
  *	Relations:
- *		Author-Publication
- *		Publication-Conference
+ *		Publish: Author-Publication
+ *		Appear: Publication-Conference
  *
  */
 
@@ -69,8 +69,8 @@ std::vector<std::string> split(const std::string &s, char delim) {
 }
 
 #define AUTHOR_BASE 0
-#define PUBLICATION_BASE 1 << 32
-#define JCONF_BASE 1 << 33
+#define PUBLICATION_BASE (1LL << 32)
+#define JCONF_BASE (1LL << 33)
 
 int main() {
 	sae::io::vid_t gvid = 0, geid = 0;
