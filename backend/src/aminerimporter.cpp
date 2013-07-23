@@ -115,8 +115,18 @@ int main() {
 	cerr << "building publications and appear relations..." << endl;
 	{
 		ifstream pubs("publication.txt");
+                ifstream pub_ext("publication_ext.txt");
 		Publication p;
+
+                int tmp_id;
+                string tmp_abstract;
+                pub_ext >> tmp_id;
+                getline(pub_ext.ignore(), tmp_abstract);
+
 		while (pubs >> p.id) {
+                        if (p.id % 10000 == 0) {
+                                cerr << "publication" << p.id << std::endl;
+                        }
 			getline(pubs.ignore(), p.title, '\t');
 			pubs >> p.jconf;
 			pubs >> p.year;
@@ -132,6 +142,18 @@ int main() {
 			} else {
 				p.citation_number = -1;
 			}
+
+                        if (p.id > tmp_id) {
+                                while (pub_ext >> tmp_id) {
+                                        getline(pub_ext.ignore(), tmp_abstract);
+                                        if (tmp_id >= p.id) break;
+                                }
+                        }
+                        if (p.id == tmp_id) {
+                                p.abstract = tmp_abstract;
+                                pub_ext >> tmp_id;
+                                getline(pub_ext.ignore(), tmp_abstract);
+                        }
 
 			pid_map[p.id] = gvid++;
 			builder.AddVertex(PUBLICATION_BASE + p.id, p, "Publication");
