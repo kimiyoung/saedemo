@@ -193,7 +193,7 @@ int main() {
 			if (ait == aid_map.end() || pit == pid_map.end()) {
 				continue;
 			}
-			builder.AddEdge(AUTHOR_BASE + ait->second, PUBLICATION_BASE + pit->second, ap, "Publish");
+			builder.AddEdge(AUTHOR_BASE + aid, PUBLICATION_BASE + pid, ap, "Publish");
 		}
 	}
 
