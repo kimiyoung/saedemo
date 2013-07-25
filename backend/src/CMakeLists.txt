@@ -16,6 +16,10 @@ file (GLOB aminerimporter_SOURCES "aminerimporter.cpp")
 add_executable(aminerimporter ${aminerimporter_SOURCES})
 target_link_libraries(aminerimporter mgraph)
 
+file (GLOB pminerimporter_SOURCES "pminerimporter.cpp")
+add_executable(pminerimporter ${pminerimporter_SOURCES})
+target_link_libraries(pminerimporter mgraph)
+
 file (GLOB aminerdata_SOURCES "aminerdata.cpp")
 add_executable(aminerdata ${aminerdata_SOURCES})
 target_link_libraries(aminerdata mgraph indexing)
