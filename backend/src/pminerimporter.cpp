@@ -10,7 +10,8 @@ using namespace std;
 
 #define GROUP_BASE 0
 #define PATENT_BASE 200000
-#define INVENTOR_BASE 4500000
+#define COMPANY_BASE 4500000
+#define INVENTOR_BASE 5000000
 
 vector<string> split(string s, char c) {
     int last = 0;
@@ -38,17 +39,31 @@ int main() {
     builder.AddVertexDataType("Patent");
     builder.AddVertexDataType("Inventor");
     builder.AddVertexDataType("Group");
+    builder.AddVertexDataType("Company");
     builder.AddEdgeDataType("PatentInventor");
     builder.AddEdgeDataType("PatentGroup");
+    builder.AddEdgeDataType("PatentCompany");
+    builder.AddEdgeDataType("CompanyGroup");
 
-    cerr << "Loading company.txt..." << endl;
+    cerr << "Loading company_ori.txt..." << endl;
     map<int, int> com2group;
-    FILE* company = fopen("company.txt", "r");
-    int x, y;
-    while (fscanf(company, "%d\t%d", &x, &y) != EOF) {
-        com2group[x] = y;
+    ifstream company_file("company_ori.txt");
+    string company_input;
+    while (getline(company_file, company_input)) {
+        auto inputs = split(company_input, '\t');
+        if (inputs.size() < 7) continue;
+        int id = convert_to_int(inputs[0]);
+        string name = inputs[1];
+        int patCount = convert_to_int(inputs[2]);
+        string logo = inputs[3];
+        string homepage = inputs[4];
+        string terms = inputs[5];
+        int gcid = convert_to_int(inputs[6]);
+
+        Company company{id, name, patCount, logo, homepage, terms, gcid};
+        com2group[id] = gcid;
+        builder.AddVertex(COMPANY_BASE + id, company, "Company");
     }
-    fclose(company);
 
     cerr << "Loading groupcom.txt..." << endl;
     ifstream group_file("groupcom.txt");
@@ -101,8 +116,16 @@ int main() {
     while (fscanf(pat2com_file, "%d\t%d", &pat, &com) != EOF) {
         int group = com2group[com];
         builder.AddEdge(PATENT_BASE + pat, GROUP_BASE + group, PatentGroup(), "PatentGroup");
+        builder.AddEdge(PATENT_BASE + pat, COMPANY_BASE + com, PatentCompany(), "PatentCompany");
     }
     fclose(pat2com_file);
+
+    cerr << "Creating Company-Group ..." << endl;
+    for (auto it = com2group.begin(); it != com2group.end(); it++) {
+        int com = (*it).first;
+        int group = (*it).second;
+        builder.AddEdge(COMPANY_BASE + com, GROUP_BASE + group, CompanyGroup(), "CompanyGroup");
+    }
 
     cerr << "Saving graph pminer..." << endl;
     builder.Save("pminer");

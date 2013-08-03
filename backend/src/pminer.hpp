@@ -13,6 +13,16 @@ struct Inventor {
     string name;
 };
 
+struct Company {
+    int id;
+    string name;
+    int patCount;
+    string logo;
+    string homepage;
+    string terms;
+    int gcid;
+};
+
 struct Group {
     int id;
     string name;
@@ -23,6 +33,12 @@ struct PatentInventor {
 };
 
 struct PatentGroup {
+};
+
+struct PatentCompany {
+};
+
+struct CompanyGroup {
 };
 
 namespace sae {
@@ -39,6 +55,26 @@ namespace sae {
             struct deserialize_impl<sae::serialization::ISerializeStream, Patent> {
                 static void run(sae::serialization::ISerializeStream& istr, Patent& p) {
                     istr >> p.id >> p.title;
+                }
+            };
+        }
+    }
+}
+
+namespace sae {
+    namespace serialization {
+        namespace custom_serialization_impl {
+            template <>
+            struct serialize_impl<sae::serialization::OSerializeStream, Company> {
+                static void run(sae::serialization::OSerializeStream& ostr, Company& c) {
+                    ostr << c.id << c.name << c.patCount << c.logo << c.homepage << c.terms << c.gcid;
+                }
+            };
+
+            template <>
+            struct deserialize_impl<sae::serialization::ISerializeStream, Company> {
+                static void run(sae::serialization::ISerializeStream& istr, Company& c) {
+                    istr >> c.id >> c.name >> c.patCount >> c.logo >> c.homepage >> c.terms >> c.gcid;
                 }
             };
         }
